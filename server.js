@@ -23,6 +23,7 @@ function quickConsole(obj) {
 }
 
 if (process.env.NODE_ENV === 'production') {
+	console.log("in production mode")
 	app.use(express.static('client/build'));
 }
 
