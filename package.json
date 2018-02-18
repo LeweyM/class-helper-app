@@ -1,7 +1,9 @@
 {
   "name": "react-app-express-lesson-helper",
   "version": "1.0.0",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "client": "cd client && npm start",
     "server": "nodemon --exec babel-node server.js",
     "dev": "concurrently --kill-others-on-fail \"npm run server\" \"npm run client\""
