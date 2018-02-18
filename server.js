@@ -23,6 +23,10 @@ function quickConsole(obj) {
 	console.log(JSON.stringify(obj, null, 4));
 }
 
+if (process.env.NODE_ENV === 'production') {
+	app.use(express.static('client/build'));
+}
+
 app.get('/api/lesson/:lid', (req, res) => {
 	db.collection('activities')
 	.findOne( { "_id": new ObjectID(req.params.lid) } )
