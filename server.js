@@ -6,8 +6,6 @@ const ObjectID = require('mongodb').ObjectID;
 const cors = require('cors');
 const bodyParser= require('body-parser')
 let db
-const server_port = process.env.OPENSHIFT_NODEJS_PORT || 5000
-const server_ip_address = process.env.OPENSHIFT_NODEJS_IP || '127.0.0.1'
 
 app.use(cors());
 app.use(bodyParser.urlencoded({extended: true}))
@@ -17,7 +15,7 @@ MongoClient.connect('mongodb://leweyMetcalf:numberwang@ds125288.mlab.com:25288/t
 		// ... start the server
 		if (err) return console.log(err)
 		db = client.db('teacher-aid-app')
-		server.listen(server_port, server_ip_address);
+		server.listen(process.env.PORT || 5000)
 	})
 
 function quickConsole(obj) {
