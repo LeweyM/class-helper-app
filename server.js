@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express();
+const path = require('path');
 const server = require('http').Server(app);
 const MongoClient = require('mongodb').MongoClient
 const ObjectID = require('mongodb').ObjectID;
@@ -17,7 +18,7 @@ function quickConsole(obj) {
 
 if (process.env.NODE_ENV === 'production') {
 	console.log("in production mode")
-	app.use("/", express.static('client/build'));
+	app.use(express.static(path.join(__dirname, 'client/build')));
 }
 
 console.log('this is a message from the server!' + process.env.NODE_ENV)
