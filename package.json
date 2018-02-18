@@ -1,6 +1,9 @@
 {
   "name": "react-app-express-lesson-helper",
   "version": "1.0.0",
+  "engines": {
+    "node": "6.11.2"
+  },
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
