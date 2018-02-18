@@ -24,7 +24,7 @@ function quickConsole(obj) {
 }
 
 if (process.env.NODE_ENV === 'production') {
-	app.use(express.static('client/build'));
+	app.use(app.static('client/build'));
 }
 
 app.get('/api/lesson/:lid', (req, res) => {
