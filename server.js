@@ -11,13 +11,6 @@ app.use(cors());
 app.use(bodyParser.urlencoded({extended: true}))
 app.use(bodyParser.json());
 
-MongoClient.connect('mongodb://leweyMetcalf:numberwang@ds125288.mlab.com:25288/teacher-aid-app', (err, client) => {
-		// ... start the server
-		if (err) return console.log(err)
-		db = client.db('teacher-aid-app')
-		server.listen(process.env.PORT || 5000)
-	})
-
 function quickConsole(obj) {
 	console.log(JSON.stringify(obj, null, 4));
 }
@@ -88,6 +81,13 @@ app.delete('/api/activity/:id', (req, res) => {
 			res.status(500).json({ message: `internal Server Error: ${err}`})
 		})
 	
+})
+
+MongoClient.connect('mongodb://leweyMetcalf:numberwang@ds125288.mlab.com:25288/teacher-aid-app', (err, client) => {
+		// ... start the server
+	if (err) return console.log(err)
+	db = client.db('teacher-aid-app')
+	server.listen(process.env.PORT || 5000)
 })
 
 //socket
