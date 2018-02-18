@@ -17,7 +17,7 @@ function quickConsole(obj) {
 
 if (process.env.NODE_ENV === 'production') {
 	console.log("in production mode")
-	app.use(express.static('client/build'));
+	app.use("/", express.static('client/build'));
 }
 
 console.log('this is a message from the server!' + process.env.NODE_ENV)
