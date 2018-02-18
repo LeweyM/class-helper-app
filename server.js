@@ -1,4 +1,5 @@
-const app = require('express')();
+const express = require('express')
+const app = express();
 const server = require('http').Server(app);
 const MongoClient = require('mongodb').MongoClient
 const ObjectID = require('mongodb').ObjectID;
@@ -24,7 +25,7 @@ function quickConsole(obj) {
 }
 
 if (process.env.NODE_ENV === 'production') {
-	app.use(app.static('client/build'));
+	app.use(express.static('client/build'));
 }
 
 app.get('/api/lesson/:lid', (req, res) => {
