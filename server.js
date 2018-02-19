@@ -107,7 +107,8 @@ const io = require('socket.io')(server);
 // server.listen(5000);
 io.on('connection', function (socket) {
 
-	console.log('socket connected')
+
+	console.log('socket connected. Connected sockets: ' + Object.keys(io.sockets.connected).length)
 
 	socket.on('createNewLesson', function (lessonId) {
 
@@ -214,7 +215,10 @@ io.on('connection', function (socket) {
   			}
   		}
   	}
-
   });
+
+  socket.on('disconnect', function () {
+  	console.log('socket disconnected. Connected sockets: ' + Object.keys(io.sockets.connected).length)
+  })
 
 });
