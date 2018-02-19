@@ -20,10 +20,6 @@ if (process.env.NODE_ENV === 'production') {
 	app.use('/', express.static(path.join(__dirname, 'client/build')));
 }
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname+'/client/build/index.html'));
-});
-
 app.get('/api/lesson/:lid', (req, res) => {
 	db.collection('activities')
 	.findOne( { "_id": new ObjectID(req.params.lid) } )
@@ -84,6 +80,10 @@ app.delete('/api/activity/:id', (req, res) => {
 		})
 	
 })
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname+'/client/build/index.html'));
+});
 
 MongoClient.connect('mongodb://leweyMetcalf:numberwang@ds125288.mlab.com:25288/teacher-aid-app', (err, client) => {
 		// ... start the server
