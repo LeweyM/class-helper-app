@@ -186,6 +186,7 @@ class Lobby extends React.Component {
 		socket.off('pinFail')
 		socket.off('pageChanged')
 		socket.off('noRoom')
+		this.props.sendPin("")
 	}
 
 	render() {

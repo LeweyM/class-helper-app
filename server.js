@@ -154,7 +154,9 @@ io.on('connection', function (socket) {
   socket.on('leadPageUpdate', function(page, roomId) {
   	const room = io.sockets.adapter.rooms[roomId];
 
-  	room.roomData.leadPage = page
+  	if (room) {
+	  	room.roomData.leadPage = page 		
+  	}
 
   	//some broadcast event to othe sockets
   	io.in(roomId).emit('pageChanged', page)
