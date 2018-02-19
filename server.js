@@ -103,11 +103,13 @@ function generatePin() {
 	return pin
 }
 
-var io = require('socket.io')(server);
+const io = require('socket.io')(server);
 // server.listen(5000);
 io.on('connection', function (socket) {
 
-  socket.on('createNewLesson', function (lessonId) {
+	console.log('socket connected')
+
+	socket.on('createNewLesson', function (lessonId) {
 
 	let roomData = {
 			studentData: {
