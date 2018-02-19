@@ -3,11 +3,9 @@ import React from "react";
 import InterfacePanel from "./InterfacePanel";
 import StudentPanel from "./StudentPanel";
 import NamePopup from "./NamePopup";
-
-
 import io from "socket.io-client";
 
-const socket = io("http://localhost:5000");
+const socket = io();
 
 class Lobby extends React.Component {
 	constructor(props) {
