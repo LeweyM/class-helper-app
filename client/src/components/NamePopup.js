@@ -11,6 +11,7 @@ class NamePopup extends React.Component {
 					<h2>{this.props.text}</h2>
 					<form onSubmit={this.props.handleNameSubmit} onChange={this.props.handleNameChange}>
 						<input type="text" />
+						<input type="submit" />
 					</form>
 				</div>
 			</div>

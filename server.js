@@ -1,23 +1,23 @@
 const express = require('express')
-const app = express();
-const path = require('path');
-const server = require('http').Server(app);
+const app = express()
+const path = require('path')
+const server = require('http').Server(app)
 const MongoClient = require('mongodb').MongoClient
-const ObjectID = require('mongodb').ObjectID;
-const cors = require('cors');
+const ObjectID = require('mongodb').ObjectID
+const cors = require('cors')
 const bodyParser= require('body-parser')
 let db
 
-app.use(cors());
+app.use(cors())
 app.use(bodyParser.urlencoded({extended: true}))
-app.use(bodyParser.json());
+app.use(bodyParser.json())
 
 function quickConsole(obj) {
-	console.log(JSON.stringify(obj, null, 4));
+	console.log(JSON.stringify(obj, null, 4))
 }
 
 if (process.env.NODE_ENV === 'production') {
-	app.use('/', express.static(path.join(__dirname, 'client/build')));
+	app.use('/', express.static(path.join(__dirname, 'client/build')))
 }
 
 app.get('/api/lesson/:lid', (req, res) => {
@@ -27,7 +27,7 @@ app.get('/api/lesson/:lid', (req, res) => {
 		res.send(result)
 	})
 	.catch(e => {
-		console.error(e);
+		console.error(e)
 	})
 })
 
@@ -42,10 +42,10 @@ app.post('/api/activities', (req, res) => {
 })
 
 app.get('/api/allLessons', (req, res) => {
-  db.collection('activities').find().toArray((err, lessons) => {
-    if (err) return console.log(err)
-    res.send({lessons})
-  })
+	db.collection('activities').find().toArray((err, lessons) => {
+	    if (err) return console.log(err)
+	    res.send({lessons})
+	})
 })
 
 app.put('/api/activity', (req, res) => {
@@ -61,14 +61,13 @@ app.put('/api/activity', (req, res) => {
 })
 
 app.delete('/api/activity/:id', (req, res) => {
-	let activityId;
+	let activityId
 	try {
 		activityId = new ObjectID(req.params.id)
 	} catch (err) {
 		res.status(422).json({ message: `internal server error: ${err}`})
 		return
 	}
-
 	db.collection('activities').deleteOne({ _id: activityId })
 		.then((deleteResult => {
 			if(deleteResult.result.n === 1) res.json({ status: 'OK'})
@@ -78,23 +77,22 @@ app.delete('/api/activity/:id', (req, res) => {
 			console.log(err)
 			res.status(500).json({ message: `internal Server Error: ${err}`})
 		})
-	
 })
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname+'/client/build/index.html'));
-});
+	res.sendFile(path.join(__dirname+'/client/build/index.html'))
+})
 
 MongoClient.connect('mongodb://leweyMetcalf:numberwang@ds125288.mlab.com:25288/teacher-aid-app', (err, client) => {
-		// ... start the server
+	// ... start the server
 	if (err) return console.log(err)
 	db = client.db('teacher-aid-app')
 	server.listen(process.env.PORT || 5000)
 })
 
-//socket
+//Socket.io functions and listeners.
 
-//TODO: Ensure Unique (maybe when adding to lookup table?)
+//TODO: Ensure that all generated pins are unique.
 function generatePin() {
 	let pin = ""
 	for (let i = 0; i < 6; i++) {
@@ -103,122 +101,116 @@ function generatePin() {
 	return pin
 }
 
-const io = require('socket.io')(server);
-// server.listen(5000);
+const io = require('socket.io')(server)
 io.on('connection', function (socket) {
-
-
 	console.log('socket connected. Connected sockets: ' + Object.keys(io.sockets.connected).length)
 
 	socket.on('createNewLesson', function (lessonId) {
+		let roomData = {
+				studentData: {
+					teacherId: socket.id, // add teacher id to room
+					teacherName: "",
+					studentIds: [],
+					studentNames: [],
+					},
+				lessonId: lessonId,
+				pin: generatePin(),
+				roomId: socket.id,
+				leadPage: 0,
+				//lesson state, such as 'room.pageCount' or 'room.hasStarted'
+			}
+		io.sockets.adapter.rooms[socket.id].roomData = roomData
+	})
 
-	let roomData = {
-			studentData: {
-				teacherId: socket.id, // add teacher id to room
-				teacherName: "",
-				studentIds: [],
-				studentNames: [],
-				},
-			lessonId: lessonId,
-			pin: generatePin(),
-			roomId: socket.id,
-			leadPage: 0,
-			//lesson state, such as 'room.pageCount' or 'room.hasStarted'
+	socket.on('joinLobby', function (roomId) {
+	  	const room = io.sockets.adapter.rooms[roomId]
+	  	if(room) {
+		  	socket.emit('updateLobby', room.roomData)
+	  	} 
+	  	if (!room || !room.roomData) {
+	  		socket.emit('noRoom')
+	  	}
+	})
+
+	socket.on('nameUpdate', function(name, isTeacher, roomId) {
+	  	const room = io.sockets.adapter.rooms[roomId]
+	  	socket.name = name
+	  	if (room) {
+	  	  	if(isTeacher) { 
+	  	  		room.roomData.studentData.teacherName = name 
+	  	  	} else {
+				room.roomData.studentData.studentNames.push(name)
+	  	  	}
+			io.in(roomId).emit('updateLobby', room.roomData)
 		}
-	io.sockets.adapter.rooms[socket.id].roomData = roomData
+	})
 
-  });
+	socket.on('leadPageUpdate', function(page, roomId) {
+	  	const room = io.sockets.adapter.rooms[roomId]
 
-  socket.on('joinLobby', function (roomId) {
-  	const room = io.sockets.adapter.rooms[roomId];
-  	if(room) {
-	  	socket.emit('updateLobby', room.roomData)
-  	} 
-  	if (!room || !room.roomData) {
-  		socket.emit('noRoom')
-  	}
-  });
+	  	if (room) {
+		  	room.roomData.leadPage = page 		
+	  	}
 
-  socket.on('nameUpdate', function(name, isTeacher, roomId) {
-  	const room = io.sockets.adapter.rooms[roomId];
-  	socket.name = name;
-  	if (room) {
-  	  	if(isTeacher) { 
-  	  		room.roomData.studentData.teacherName = name 
-  	  	} else {
-			room.roomData.studentData.studentNames.push(name)
-  	  	}
-		io.in(roomId).emit('updateLobby', room.roomData)
-	}
-  })
+	  	//some broadcast event to othe sockets
+	  	io.in(roomId).emit('pageChanged', page)
+	})
 
-  socket.on('leadPageUpdate', function(page, roomId) {
-  	const room = io.sockets.adapter.rooms[roomId];
+	socket.on('checkPin', function (pinAttempt) {
+		//search through room pins
+		const rooms = io.sockets.adapter.rooms
+		let pinFound = false
+		for (let roomId in rooms) {
+			if(rooms[roomId].roomData) {
+				if(rooms[roomId].roomData.pin === pinAttempt) {
 
-  	if (room) {
-	  	room.roomData.leadPage = page 		
-  	}
-
-  	//some broadcast event to othe sockets
-  	io.in(roomId).emit('pageChanged', page)
-  })
-
-  socket.on('checkPin', function (pinAttempt) {
-	//search through room pins
-	const rooms = io.sockets.adapter.rooms;
-	let pinFound = false;
-	for (let roomId in rooms) {
-		if(rooms[roomId].roomData) {
-			if(rooms[roomId].roomData.pin === pinAttempt) {
-
-				//add socket to lesson Room
-				socket.join(roomId, () => {
-					rooms[roomId].roomData.studentData.studentIds.push(socket.id)
-					//catch errors here
-				});
-				socket.emit('updateLobby', rooms[roomId].roomData)
-				return pinFound = true;
-			} 
+					//add socket to lesson Room
+					socket.join(roomId, () => {
+						rooms[roomId].roomData.studentData.studentIds.push(socket.id)
+						//catch errors here
+					})
+					socket.emit('updateLobby', rooms[roomId].roomData)
+					return pinFound = true
+				} 
+			}
 		}
-	}
-	if (pinFound == false) {
-		socket.emit('pinFail')
-	}
-  })
+		if (pinFound == false) {
+			socket.emit('pinFail')
+		}
+	})
 
-  socket.on('disconnecting', function () {
-  	for (let roomId in io.sockets.adapter.rooms) {
-  		let room = io.sockets.adapter.rooms[roomId]
-  		if (room.roomData) {
-  			let studentData = room.roomData.studentData
-  			if (studentData.teacherId == socket.id) {
-  				//teacher has left
-  				console.log('teacher has left the room!')
-  			} 
-  			let changed = false
-  			studentData.studentIds.forEach((studentId, i) => {
-  				if (studentId == socket.id) {
-  					studentData.studentIds.splice(i, 1)
-  					changed = true;
-  					return
-  				}
-  			})
-  			studentData.studentNames.forEach((studentName, i) => {
-  				if (studentName == socket.name) {
-  					studentData.studentNames.splice(i, 1)
-  					changed = true;
-  					return
-  				}
-  			})
-  			if (changed) {
-  				io.in(roomId).emit('studentChange', studentData)
-  			}
-  		}
-  	}
-  });
+	socket.on('disconnecting', function () {
+	  	for (let roomId in io.sockets.adapter.rooms) {
+	  		let room = io.sockets.adapter.rooms[roomId]
+	  		if (room.roomData) {
+	  			let studentData = room.roomData.studentData
+	  			if (studentData.teacherId == socket.id) {
+	  				//teacher has left
+	  				console.log('teacher has left the room!')
+	  			} 
+	  			let changed = false
+	  			studentData.studentIds.forEach((studentId, i) => {
+	  				if (studentId == socket.id) {
+	  					studentData.studentIds.splice(i, 1)
+	  					changed = true
+	  					return
+	  				}
+	  			})
+	  			studentData.studentNames.forEach((studentName, i) => {
+	  				if (studentName == socket.name) {
+	  					studentData.studentNames.splice(i, 1)
+	  					changed = true
+	  					return
+	  				}
+	  			})
+	  			if (changed) {
+	  				io.in(roomId).emit('studentChange', studentData)
+	  			}
+	  		}
+	  	}
+	})
 
-  socket.on('disconnect', function () {
-  	console.log('socket disconnected. Connected sockets: ' + Object.keys(io.sockets.connected).length)
-  })
-
-});
+	socket.on('disconnect', function () {
+	  	console.log('socket disconnected. Connected sockets: ' + Object.keys(io.sockets.connected).length)
+	})
+})

@@ -46,6 +46,7 @@ class Home extends React.Component {
 				<h2>Enter Pin</h2>
 				<form onSubmit={this.handlePinSubmit} onChange={this.handlePinChange}>
 					<input type="text" />
+					<input type="submit" />
 				</form>
 			</div>
 
